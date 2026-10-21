@@ -88,12 +88,21 @@
   .why { margin-top: 10px; background: var(--warn-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
   .why b { color: var(--warn); }
 
+  dl.gloss { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 16px; }
+  dl.gloss div { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+  dl.gloss dt { font-weight: 700; font-size: 14px; direction: ltr; text-align: right; }
+  dl.gloss dd { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+
+  table.cost { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.cost th, table.cost td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--border); }
+  table.cost th { color: var(--muted); font-weight: 600; }
+
   blockquote.cv { margin: 8px 0 0; background: var(--surface-2); border-radius: 12px; padding: 12px 16px; direction: ltr; text-align: left; font-size: 14px; }
   blockquote.cv ul { margin: 6px 0 0; padding-left: 18px; }
   footer { margin-top: 30px; color: var(--faint); font-size: 13px; }
 
   @media (max-width: 680px) {
-    .steps { grid-template-columns: minmax(0, 1fr); }
+    .steps, dl.gloss { grid-template-columns: minmax(0, 1fr); }
     header h1 { font-size: 24px; }
   }
 </style>
@@ -103,7 +112,7 @@
 
 <header>
   <h1>رادار الوظائف للخريجين</h1>
-  <p class="sub">Saudi Junior Jobs Radar · خطة تنفيذية وتعليمية لمدة 4 أسابيع · GCP</p>
+  <p class="sub">Saudi Junior Jobs Radar · خطة تنفيذية وتعليمية لمدة 4 أسابيع · AWS</p>
 </header>
 
 <div class="progress">
@@ -114,18 +123,18 @@
 <nav class="toc" aria-label="المحتويات">
   <a href="#goal">الهدف</a><a href="#arch">شكل النظام</a><a href="#method">طريقة الجلسة</a>
   <a href="#w0">الأسبوع 0</a><a href="#w1">الأسبوع 1</a><a href="#w2">الأسبوع 2</a><a href="#w3">الأسبوع 3</a><a href="#w4">الأسبوع 4</a>
-  <a href="#cv">في الـ CV</a><a href="#notes">ملاحظات</a>
+  <a href="#cost">التكلفة</a><a href="#gloss">القاموس</a><a href="#cv">في الـ CV</a><a href="#notes">ملاحظات</a>
 </nav>
 
 <section id="goal">
   <h2>الهدف النهائي</h2>
   <div class="panel">
-    <p>خدمة تجمع وظايف التقنية للخريجين وبرامج تطوير الخريجين في السعودية كل يوم، وتشيل اللي يطلب خبرة، وتنبّه المشتركين بالجديد على تيليجرام، وفيها صفحة ويب عامة.</p>
+    <p>خدمة تجمع كل يوم وظايف التقنية للخريجين وبرامج تطوير الخريجين في السعودية، وتشيل اللي يطلب خبرة، وتنشر الجديد كل صباح في قناة تيليجرام وعلى صفحة ويب عامة.</p>
     <p>بعد 4 أسابيع يكون عندك:</p>
     <ul class="clean">
-      <li><b>صفحة ويب عامة</b> برابط حقيقي، تتحدث كل يوم.</li>
-      <li><b>بوت تيليجرام</b> يرسل الوظايف الجديدة كل صباح.</li>
-      <li><b>كل شي على GCP</b>، مبني بـ Terraform، وينشر نفسه تلقائياً، وفيه مراقبة وتنبيهات.</li>
+      <li><b>صفحة ويب عامة</b> برابط حقيقي وHTTPS، تتحدث كل يوم.</li>
+      <li><b>قناة تيليجرام</b> ينشر فيها البوت الوظايف الجديدة كل صباح.</li>
+      <li><b>كل شي على AWS</b>، مبني بـ Terraform، وينشر نفسه تلقائياً، وفيه مراقبة وتنبيهات.</li>
       <li><b>ريبو على GitHub</b> فيه رسم للنظام وشرح، و<b>بوست LinkedIn</b>.</li>
     </ul>
   </div>
@@ -134,23 +143,22 @@
 <section id="arch">
   <h2>شكل النظام</h2>
   <div class="panel">
-<pre class="arch">  Every day 08:00
-  Cloud Scheduler ──▶ Collector (Cloud Run Job)
-                          │  fetch: Greenhouse / Lever / Workable + manual programs
-                          │  filter: drop roles asking 3+ years
-                          ▼
-                      Cloud SQL (Postgres) ◀── Web (Cloud Run Service)
-                          │                     ├─ public jobs page
-                          ▼                     └─ Telegram subscribe webhook
-                    Telegram: send new jobs to subscribers</pre>
-    <p>النظام فيه خدمتين بس: <b>Collector</b> و<b>Web</b>. خدمة أقل يعني تعقيد أقل وأنت تتعلم.</p>
+<pre class="arch">  Every day 08:00 (Riyadh)
+  EventBridge Scheduler ──▶ Collector (ECS Fargate task, runs ~2 min)
+                               │  fetch: Greenhouse / Lever / Workable + manual programs
+                               │  filter: drop roles asking 3+ years
+                               ├──▶ RDS Postgres (private)    save jobs, find the new ones
+                               ├──▶ S3 ──▶ CloudFront (HTTPS) public jobs page
+                               └──▶ Telegram channel          post new jobs</pre>
+    <p>النظام كله <b>برنامج واحد</b> يصحى كل صباح، يشتغل دقيقتين، ويطفي. يحفظ الوظايف في قاعدة البيانات، ويطبع صفحة الويب كملف جاهز، وينشر الجديد في القناة.</p>
+    <div class="why"><b>ليش ما فيه سيرفر ويب شغال طول اليوم؟</b> السيرفر اللي شغال 24 ساعة هو أغلى شي في AWS، ويحتاج خدمات شبكات مدفوعة. لما تكون الصفحة ملف جاهز، والناس تشترك في قناة بدل البوت، يصير الشي الوحيد اللي يكلف هو قاعدة البيانات. والتعلم نفسه ما ينقص.</div>
   </div>
 </section>
 
 <section id="method">
   <h2>طريقة كل جلسة</h2>
   <div class="steps">
-    <div class="step"><b>1. شرح</b><span>وش المفهوم، وليش موجود، ومثال من الحياة، قبل أي كود.</span></div>
+    <div class="step"><b>1. شرح</b><span>وش المفهوم، وليش موجود، ومثال من الحياة، قبل أي كود. وكل مصطلح جديد ينشرح.</span></div>
     <div class="step"><b>2. تطبيق</b><span>أنت تكتب الكود أو الأوامر بنفسك، وأنا معك.</span></div>
     <div class="step"><b>3. تحقق</b><span>نكسر الشي عن قصد ونصلحه، أو تشرحه بكلامك. ما ننتقل قبل ما يكون واضح.</span></div>
   </div>
@@ -160,75 +168,113 @@
 <section id="w0" class="panel week" style="--wc:var(--w0)">
   <div class="week-head"><h2>الأسبوع 0: تجهيز</h2><span class="goal">يوم واحد</span></div>
   <div class="days">
-    <label class="day" data-id="w0-1"><input type="checkbox"><span class="dt">حساب GCP</span><span class="concept">الرصيد المجاني 300 دولار، و<b>تنبيه ميزانية عند 20 دولار</b> عشان ما تتفاجأ بفاتورة.</span><span class="task">تفعيل الحساب، وإنشاء Project، وBudget Alert</span></label>
-    <label class="day" data-id="w0-2"><input type="checkbox"><span class="dt">ريبو GitHub</span><span class="concept">مكان الكود والـ CI/CD.</span><span class="task">ريبو جديد <code>saudi-junior-jobs</code> وربطه بهالمجلد</span></label>
-    <label class="day" data-id="w0-3"><input type="checkbox"><span class="dt">بوت تيليجرام</span><span class="concept">BotFather يعطيك توكن تتحكم فيه بالبوت.</span><span class="task">إنشاء البوت وحفظ التوكن في مكان آمن (مو في الكود)</span></label>
-    <label class="day" data-id="w0-4"><input type="checkbox"><span class="dt">الأدوات</span><span class="concept">الأدوات اللي بنستخدمها طول المشروع.</span><span class="task">Docker Desktop وPython 3.12 وTerraform و<code>gcloud</code> CLI</span></label>
+    <label class="day" data-id="w0-1" data-default-done><input type="checkbox"><span class="dt">اختيار السحابة</span><span class="concept">Google Cloud في السعودية لازم يمر عن طريق CNTXT، وهم ما يقبلون أفراد. فبحثنا وقررنا <b>AWS</b>.</span><span class="task">بحث عن أكثر سحابة مطلوبة في الوظايف، وقرار</span></label>
+    <label class="day" data-id="w0-2" data-default-done><input type="checkbox"><span class="dt">ريبو GitHub</span><span class="concept">مكان الكود، و<code>.gitignore</code> يمنع الأسرار من إنها تنرفع بالغلط.</span><span class="task">ريبو <code>saudi-junior-jobs</code> عام، وأول commit</span></label>
+    <label class="day" data-id="w0-3" data-default-done><input type="checkbox"><span class="dt">بوت تيليجرام</span><span class="concept">BotFather يعطيك <b>توكن</b>، وهو كلمة السر حقت البوت. لو انكشف، تلغيه بـ <code>/revoke</code>.</span><span class="task">إنشاء البوت وحفظ التوكن برا الكود</span></label>
+    <label class="day" data-id="w0-4" data-default-done><input type="checkbox"><span class="dt">الأدوات</span><span class="concept">الأدوات اللي بنستخدمها طول المشروع.</span><span class="task">Docker (OrbStack) وPython وTerraform وAWS CLI</span></label>
   </div>
 </section>
 
 <section id="w1" class="panel week" style="--wc:var(--w1)">
-  <div class="week-head"><h2>الأسبوع 1: التطبيق يشتغل على جهازك</h2></div>
-  <p class="goal">الهدف: أمر واحد يشغّل النظام كامل على جهازك.</p>
+  <div class="week-head"><h2>الأسبوع 1: المشروع يشتغل على جهازك</h2></div>
+  <p class="goal">الهدف: أمر واحد يشغّل النظام كامل على جهازك، بدون أي سحابة.</p>
   <div class="days">
-    <label class="day" data-id="w1-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Git Flow وPull Requests</small></span><span class="concept">ما تعدّل على النسخة الأساسية مباشرة. تسوي <b>فرع</b>، وتفتح <b>طلب دمج</b>، وبعدها تدمج.</span><span class="task">تجهيز الريبو، وحماية فرع main، وأول PR</span></label>
-    <label class="day" data-id="w1-2"><input type="checkbox"><span class="dt">اليوم 2 <small>APIs ومصادر البيانات</small></span><span class="concept">شركات كثيرة تنشر وظايفها عبر <b>Greenhouse وLever وWorkable</b>، وكل واحد منها له رابط JSON عام.</span><span class="task">Collector يجيب وظايف 10 شركات سعودية</span></label>
-    <label class="day" data-id="w1-3"><input type="checkbox"><span class="dt">اليوم 3 <small>الفلترة والاختبارات</small></span><span class="concept">المنطق الأساسي للمشروع: هل الوظيفة جونيور؟ ونكتب <b>اختبار لكل قاعدة</b>.</span><span class="task">دالة تشيل الوظايف اللي تطلب 3 سنوات أو أكثر، و10 اختبارات لها</span></label>
-    <label class="day" data-id="w1-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Docker</small></span><span class="concept">تحط التطبيق في <b>صندوق</b> فيه كل اللي يحتاجه، فيشتغل بنفس الطريقة على أي جهاز.</span><span class="task">Dockerfile للـ Collector وDockerfile للـ Web</span></label>
-    <label class="day" data-id="w1-5"><input type="checkbox"><span class="dt">اليوم 5 <small>Docker Compose وEnvironment Variables</small></span><span class="concept">تشغّل <b>أكثر من صندوق مع بعض</b>، والإعدادات تنحط برا الكود.</span><span class="task"><code>docker compose up</code> يشغّل الخدمتين مع Postgres</span></label>
+    <label class="day" data-id="w1-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Branches وPull Requests</small></span><span class="concept">ما تعدّل على <code>main</code> مباشرة. تسوي <b>فرع</b>، وتفتح <b>طلب دمج</b>، وبعدها تدمج. ونقفل <code>main</code> عشان حتى أنت ما تقدر تتجاوز هالطريقة.</span><span class="task">حماية فرع main، وأول PR</span></label>
+    <label class="day" data-id="w1-2"><input type="checkbox"><span class="dt">اليوم 2 <small>APIs وJSON</small></span><span class="concept">شركات كثيرة تنشر وظايفها عن طريق <b>Greenhouse وLever وWorkable</b>، ولكل واحد منها رابط عام يرجّع البيانات بصيغة JSON.</span><span class="task">نتأكد إن عندنا 10 شركات سعودية على هالمنصات، والبرنامج يجيب وظايفها</span></label>
+    <label class="day" data-id="w1-3"><input type="checkbox"><span class="dt">اليوم 3 <small>الفلترة والاختبارات</small></span><span class="concept">هذا قلب المشروع: هل الوظيفة جونيور؟ ونكتب <b>اختبار لكل قاعدة</b>، بالعربي والإنجليزي.</span><span class="task">دالة تشيل الوظايف اللي تطلب 3 سنوات أو أكثر، و10 اختبارات لها</span></label>
+    <label class="day" data-id="w1-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Docker وPostgres</small></span><span class="concept">تحط البرنامج في <b>صندوق</b> فيه كل اللي يحتاجه، فيشتغل بنفس الطريقة على أي جهاز. وقاعدة البيانات تحفظ الوظايف وتعرف وش الجديد.</span><span class="task">Dockerfile للبرنامج، وPostgres في Docker، وحفظ الوظايف بدون تكرار</span></label>
+    <label class="day" data-id="w1-5"><input type="checkbox"><span class="dt">اليوم 5 <small>Docker Compose وEnvironment Variables</small></span><span class="concept">تشغّل <b>أكثر من صندوق مع بعض</b> بأمر واحد، والإعدادات والأسرار تنحط برا الكود في ملف <code>.env</code>.</span><span class="task"><code>docker compose up</code>: البرنامج يجيب الوظايف، ويطبع الصفحة، وينشر في قناة تيليجرام تجريبية</span></label>
   </div>
-  <div class="milestone">✅ نهاية الأسبوع: تفتح <code>localhost</code> وتشوف صفحة فيها وظايف حقيقية.</div>
+  <div class="milestone">✅ نهاية الأسبوع: تفتح المتصفح على جهازك وتشوف صفحة فيها وظايف حقيقية، ويوصلك الجديد في تيليجرام.</div>
 </section>
 
 <section id="w2" class="panel week" style="--wc:var(--w2)">
-  <div class="week-head"><h2>الأسبوع 2: CI وأول خطوة في GCP</h2></div>
-  <p class="goal">الهدف: التطبيق شغّال على GCP، ونشرته بيدك.</p>
+  <div class="week-head"><h2>الأسبوع 2: CI وأول مرة على AWS</h2></div>
+  <p class="goal">الهدف: المشروع شغّال على AWS، وأنت بنيته بيدك من الموقع.</p>
   <div class="days">
-    <label class="day" data-id="w2-1"><input type="checkbox"><span class="dt">اليوم 1 <small>CI</small></span><span class="concept">كل push يشغّل الاختبارات تلقائياً. عندك خبرة فيه، فهنا نطوّره.</span><span class="task">GitHub Actions يشغّل الاختبارات ويبني الـ images</span></label>
-    <label class="day" data-id="w2-2"><input type="checkbox"><span class="dt">اليوم 2 <small>أساسيات GCP</small></span><span class="concept"><b>Project</b> و<b>Region</b> و<b>IAM</b> (مين يقدر يسوي وش) و<b>Service Accounts</b> (حسابات للبرامج مو للبشر).</span><span class="task">جولة في الكونسول، وأول Service Account، ونتأكد من خدمات منطقة الدمام</span></label>
-    <label class="day" data-id="w2-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Artifact Registry</small></span><span class="concept">مكتبة تنحفظ فيها نسخ التطبيق <b>برقم إصدار</b>.</span><span class="task">رفع الـ images يدوي وفهم الـ tags</span></label>
-    <label class="day" data-id="w2-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Cloud Run وCloud SQL</small></span><span class="concept"><b>Cloud Run</b> يشغّل الصندوق بدون ما تدير سيرفر. <b>Cloud SQL</b> قاعدة Postgres مُدارة عنك.</span><span class="task">نشر الـ Web والـ Collector يدوي من الكونسول</span></label>
-    <label class="day" data-id="w2-5"><input type="checkbox"><span class="dt">اليوم 5 <small>Security Scanning</small></span><span class="concept">نفحص الصندوق ونكتشف المكتبات اللي فيها <b>ثغرات</b> قبل ما تنزل.</span><span class="task">إضافة Trivy للـ CI</span></label>
+    <label class="day" data-id="w2-1"><input type="checkbox"><span class="dt">اليوم 1 <small>CI</small></span><span class="concept">كل ما ترفع كود، GitHub <b>يشغّل الاختبارات تلقائياً</b>. ولو فشلت، ما ينقبل الـ PR.</span><span class="task">GitHub Actions يشغّل الاختبارات ويبني الـ image</span></label>
+    <label class="day" data-id="w2-2"><input type="checkbox"><span class="dt">اليوم 2 <small>حساب AWS وIAM</small></span><span class="concept">حساب الـ <b>root</b> يقدر يسوي كل شي، فنحميه بـ MFA وما نستخدمه. و<b>IAM</b> هو اللي يحدد مين يقدر يسوي وش.</span><span class="task">فتح الحساب، وMFA، ومستخدم يومي، وتنبيه ميزانية، وتفعيل منطقة البحرين</span></label>
+    <label class="day" data-id="w2-3"><input type="checkbox"><span class="dt">اليوم 3 <small>الشبكات وRDS</small></span><span class="concept"><b>VPC</b> شبكتك الخاصة داخل AWS. فيها جزء عام يوصل للإنترنت، وجزء خاص مخفي. وقاعدة البيانات تنحط في الخاص.</span><span class="task">VPC وقاعدة Postgres على RDS، ونحل لغز "كيف يوصل البرنامج للإنترنت ولقاعدة البيانات بدون NAT"</span></label>
+    <label class="day" data-id="w2-4"><input type="checkbox"><span class="dt">اليوم 4 <small>ECR وECS Fargate</small></span><span class="concept"><b>ECR</b> مكتبة تحفظ فيها صناديقك برقم إصدار. و<b>Fargate</b> يشغّل الصندوق بدون ما تدير سيرفر.</span><span class="task">رفع الـ image، وتشغيل البرنامج على AWS يدوي</span></label>
+    <label class="day" data-id="w2-5"><input type="checkbox"><span class="dt">اليوم 5 <small>S3 وCloudFront</small></span><span class="concept"><b>S3</b> مخزن ملفات، و<b>CloudFront</b> يعرضها للعالم برابط سريع وآمن (HTTPS).</span><span class="task">الصفحة تنرفع على S3 وتنفتح من رابط عام</span></label>
   </div>
-  <div class="why"><b>ليش ننشر يدوي أول؟</b> عشان تفهم كل قطعة بيدك. وفي الأسبوع الجاي بنحوّل نفس الخطوات لكود، وبتعرف بالضبط وش يسوي الكود.</div>
-  <div class="milestone">✅ نهاية الأسبوع: رابط <code>*.run.app</code> شغّال على الإنترنت.</div>
+  <div class="why"><b>ليش نبني يدوي أول؟</b> عشان تفهم كل قطعة بيدك. وفي الأسبوع الجاي بنحوّل نفس الخطوات لكود، وبتعرف بالضبط وش يسوي كل سطر.</div>
+  <div class="milestone">✅ نهاية الأسبوع: رابط <code>*.cloudfront.net</code> شغّال على الإنترنت، وأي أحد يقدر يفتحه.</div>
 </section>
 
 <section id="w3" class="panel week" style="--wc:var(--w3)">
   <div class="week-head"><h2>الأسبوع 3: كل شي كود، وكل شي تلقائي</h2></div>
   <p class="goal">الهدف: تحذف كل اللي سويته يدوي، وأمر واحد يرجّعه.</p>
   <div class="days">
-    <label class="day" data-id="w3-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Infrastructure as Code</small></span><span class="concept">تكتب البنية <b>كملف كود</b> بدل الضغط في الكونسول، فتقدر تعيدها وتراجعها وتحفظ نسخها.</span><span class="task">أول ملف Terraform يسوي Artifact Registry، ونتعلم <code>plan</code> و<code>apply</code></span></label>
-    <label class="day" data-id="w3-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Terraform State وModules</small></span><span class="concept">Terraform يتذكر وش سوّى في ملف اسمه <b>state</b>، وننقل هالملف للسحابة.</span><span class="task">State في Cloud Storage، وتعريف Cloud Run وCloud SQL في Terraform</span></label>
-    <label class="day" data-id="w3-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Secrets Management</small></span><span class="concept">كلمات المرور والتوكنات <b>ما تنحط في الكود</b> ولا في GitHub.</span><span class="task">توكن تيليجرام وكلمة مرور قاعدة البيانات في Secret Manager</span></label>
-    <label class="day" data-id="w3-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Scheduled Jobs</small></span><span class="concept">مهمة تشتغل <b>في وقت محدد</b> بدون ما تشغّلها أنت.</span><span class="task">Cloud Scheduler يشغّل الـ Collector كل يوم الساعة 8</span></label>
-    <label class="day" data-id="w3-5"><input type="checkbox"><span class="dt">اليوم 5 <small>CD وWorkload Identity</small></span><span class="concept">النشر يصير <b>تلقائي</b>، ونربط GitHub بـ GCP <b>بدون مفاتيح سرية</b>.</span><span class="task">كل merge على main ينبني ويتفحص وينزل على Cloud Run</span></label>
+    <label class="day" data-id="w3-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Infrastructure as Code</small></span><span class="concept">تكتب البنية <b>كملف</b> بدل الضغط في الموقع، مثل مخطط البيت اللي تعطيه للمقاول.</span><span class="task">أول ملف Terraform يسوي ECR وS3، ونتعلم <code>plan</code> و<code>apply</code> و<code>destroy</code></span></label>
+    <label class="day" data-id="w3-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Terraform State وModules</small></span><span class="concept">Terraform يتذكر وش بنى في ملف اسمه <b>state</b>، وننقل هالملف لـ S3 عشان ما يضيع.</span><span class="task">State في S3، وVPC وRDS وECS كلها في Terraform</span></label>
+    <label class="day" data-id="w3-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Secrets</small></span><span class="concept">كلمات المرور والتوكنات <b>ما تنحط في الكود</b> ولا في GitHub. تنحفظ في AWS، والبرنامج يقراها وقت التشغيل.</span><span class="task">توكن تيليجرام وكلمة مرور قاعدة البيانات في SSM Parameter Store</span></label>
+    <label class="day" data-id="w3-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Scheduled Jobs</small></span><span class="concept">مهمة تشتغل <b>في وقت محدد</b> بدون ما تشغّلها أنت.</span><span class="task">EventBridge Scheduler يشغّل البرنامج كل يوم الساعة 8 بتوقيت الرياض</span></label>
+    <label class="day" data-id="w3-5"><input type="checkbox"><span class="dt">اليوم 5 <small>CD وOIDC</small></span><span class="concept">النشر يصير <b>تلقائي</b>، وGitHub يدخل على AWS <b>بدون مفاتيح سرية محفوظة</b>. وكل image ينفحص قبل ما ينزل.</span><span class="task">كل merge على main: يبني، ويفحص الثغرات بـ Trivy، وينزل على AWS</span></label>
   </div>
-  <div class="milestone">✅ نهاية الأسبوع: تحذف كل شي، و<code>terraform apply</code> يرجّع النظام كامل. وتعديل سطر واحد ينزل لحاله على الإنترنت.</div>
+  <div class="milestone">✅ نهاية الأسبوع: تحذف كل شي، و<code>terraform apply</code> يرجّع النظام كامل. وتعديل سطر واحد ينزل لحاله.</div>
 </section>
 
 <section id="w4" class="panel week" style="--wc:var(--w4)">
   <div class="week-head"><h2>الأسبوع 4: مراقبة وإطلاق</h2></div>
   <p class="goal">الهدف: نظام تقدر تعتمد عليه، وناس تستخدمه.</p>
   <div class="days">
-    <label class="day" data-id="w4-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Logging</small></span><span class="concept">كل خدمة تكتب وش صار، وأنت تبحث فيها <b>من مكان واحد</b>.</span><span class="task">سجلات مرتبة (structured logs) وبحث في Cloud Logging</span></label>
-    <label class="day" data-id="w4-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Monitoring وAlerts</small></span><span class="concept">تعرف إن فيه مشكلة <b>قبل ما يقولك المستخدم</b>.</span><span class="task">تنبيه إذا الـ Collector فشل أو جاب صفر وظائف، وفحص uptime للصفحة</span></label>
+    <label class="day" data-id="w4-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Logging</small></span><span class="concept">كل تشغيل يكتب وش صار، وأنت تبحث في السجلات <b>من مكان واحد</b>.</span><span class="task">سجلات مرتبة (structured logs) وبحث فيها بـ CloudWatch</span></label>
+    <label class="day" data-id="w4-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Monitoring وAlerts</small></span><span class="concept">تعرف إن فيه مشكلة <b>قبل ما يقولك المستخدم</b>.</span><span class="task">إيميل لو البرنامج فشل، أو جاب صفر وظايف، أو الصفحة طاحت</span></label>
     <label class="day" data-id="w4-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Rollback وVersioning</small></span><span class="concept">لو نزّلت نسخة خربانة، ترجع للنسخة اللي قبلها <b>في ثواني</b>.</span><span class="task">ننزّل نسخة فيها خطأ عن قصد ونرجع منها</span></label>
-    <label class="day" data-id="w4-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Domain وHTTPS</small></span><span class="concept">رابط <b>مرتب وآمن</b> بدل رابط Cloud Run الطويل.</span><span class="task">ربط دومين (اختياري، حوالي 40 ريال في السنة)</span></label>
-    <label class="day" data-id="w4-5"><input type="checkbox"><span class="dt">اليوم 5 <small>التوثيق والإطلاق</small></span><span class="concept">الريبو هو <b>واجهتك</b> قدام الشركات.</span><span class="task">README فيه رسم النظام، ونشر البوت في قروبات الخريجين، وبوست LinkedIn</span></label>
+    <label class="day" data-id="w4-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Domain وHTTPS</small></span><span class="concept">رابط <b>باسمك</b> بدل رابط CloudFront الطويل.</span><span class="task">ربط دومين (اختياري، حوالي 40 ريال في السنة)</span></label>
+    <label class="day" data-id="w4-5"><input type="checkbox"><span class="dt">اليوم 5 <small>التوثيق والإطلاق</small></span><span class="concept">الريبو هو <b>واجهتك</b> قدام الشركات.</span><span class="task">README فيه رسم النظام، ونشر القناة في قروبات الخريجين، وبوست LinkedIn</span></label>
   </div>
   <div class="milestone">✅ نهاية الأسبوع: مشروع منشور، وعليه مستخدمين، وريبو مرتب، وبوست على LinkedIn.</div>
+</section>
+
+<section id="cost">
+  <h2>التكلفة</h2>
+  <div class="panel">
+    <table class="cost">
+      <tr><th>الشي</th><th>التكلفة</th></tr>
+      <tr><td>GitHub وتيليجرام وDocker وTerraform</td><td>مجانية</td></tr>
+      <tr><td>AWS أول 6 شهور</td><td>مجاني من الرصيد اللي يعطونك (100 إلى 200 دولار)</td></tr>
+      <tr><td>AWS بعد الرصيد</td><td>حوالي 15 دولار في الشهر، أغلبها قاعدة البيانات</td></tr>
+      <tr><td>الدومين</td><td>اختياري، حوالي 40 ريال في السنة</td></tr>
+    </table>
+    <p style="color:var(--muted);font-size:14px">ولو ما تبي تدفع بعد الرصيد، <code>terraform destroy</code> يحذف كل شي، و<code>terraform apply</code> يرجّعه وقت ما تحتاجه.</p>
+  </div>
+</section>
+
+<section id="gloss">
+  <h2>القاموس</h2>
+  <div class="panel">
+    <dl class="gloss">
+      <div><dt>Docker / image / container</dt><dd>الـ image صندوق جاهز فيه البرنامج وكل اللي يحتاجه. والـ container هو الصندوق وهو شغّال.</dd></div>
+      <div><dt>CI / CD</dt><dd>CI: الاختبارات تشتغل تلقائياً مع كل تعديل. CD: النشر يصير تلقائياً بعد الدمج.</dd></div>
+      <div><dt>IAM</dt><dd>نظام الصلاحيات في AWS: مين يقدر يسوي وش.</dd></div>
+      <div><dt>root</dt><dd>الحساب الأساسي في AWS، يقدر يسوي كل شي. نحميه وما نستخدمه.</dd></div>
+      <div><dt>VPC / subnet</dt><dd>شبكتك الخاصة داخل AWS. الـ subnet جزء منها: عام يوصل للإنترنت، أو خاص مخفي.</dd></div>
+      <div><dt>NAT Gateway</dt><dd>بوابة تخلي الجزء الخاص يطلع للإنترنت. تكلف حوالي 33 دولار في الشهر، فنتجنبها.</dd></div>
+      <div><dt>RDS</dt><dd>قاعدة بيانات Postgres تديرها AWS عنك: النسخ الاحتياطي والتحديثات عليهم.</dd></div>
+      <div><dt>ECR</dt><dd>مكتبة في AWS تحفظ فيها الـ images برقم إصدار.</dd></div>
+      <div><dt>ECS Fargate</dt><dd>يشغّل الصندوق حقك بدون ما تدير سيرفر. تدفع على الدقايق اللي اشتغلها بس.</dd></div>
+      <div><dt>EventBridge Scheduler</dt><dd>منبّه يشغّل البرنامج في وقت محدد كل يوم.</dd></div>
+      <div><dt>S3 / CloudFront</dt><dd>S3 مخزن ملفات. وCloudFront يوصلها للناس بسرعة وبرابط HTTPS.</dd></div>
+      <div><dt>SSM Parameter Store</dt><dd>خزنة في AWS للأسرار مثل التوكنات وكلمات المرور.</dd></div>
+      <div><dt>CloudWatch</dt><dd>المكان اللي تشوف فيه السجلات والأرقام، وتحط فيه التنبيهات.</dd></div>
+      <div><dt>Terraform / state</dt><dd>تكتب البنية كملفات وهو يبنيها. والـ state دفتر يتذكر فيه وش بنى.</dd></div>
+      <div><dt>OIDC</dt><dd>طريقة تخلي GitHub يدخل AWS بهوية مؤقتة، بدل مفتاح سري محفوظ.</dd></div>
+      <div><dt>AWS CLI</dt><dd>ريموت كنترول لـ AWS من التيرمنال.</dd></div>
+    </dl>
+  </div>
 </section>
 
 <section id="cv">
   <h2>وش ينضاف في سيرتك</h2>
   <div class="panel">
     <blockquote class="cv">
-      <b>Saudi Junior Jobs Radar</b> — GCP · Terraform · Docker · GitHub Actions · Python · Postgres
+      <b>Saudi Junior Jobs Radar</b> — AWS · Terraform · Docker · GitHub Actions · Python · Postgres
       <ul>
-        <li>Built a service that collects junior tech jobs and graduate programs in Saudi Arabia daily and alerts [X] subscribers on Telegram.</li>
-        <li>Provisioned all infrastructure with Terraform on GCP (Cloud Run, Cloud SQL, Scheduler, Secret Manager), with keyless CI/CD from GitHub Actions.</li>
-        <li>Added monitoring, alerting and one-step rollback; the pipeline scans every image before deploy.</li>
+        <li>Built a service that collects junior tech jobs and graduate programs in Saudi Arabia daily and posts them to a Telegram channel with [X] subscribers.</li>
+        <li>Provisioned all infrastructure with Terraform on AWS (ECS Fargate, RDS, EventBridge Scheduler, S3, CloudFront), with keyless OIDC CI/CD from GitHub Actions.</li>
+        <li>Designed for low cost (no always-on servers or NAT), with monitoring, alerting and one-step rollback; the pipeline scans every image before deploy.</li>
       </ul>
     </blockquote>
   </div>
@@ -238,20 +284,20 @@
   <h2>ملاحظات</h2>
   <div class="panel">
     <ul class="clean">
-      <li><b>التكلفة:</b> Cloud SQL هو الشي الوحيد اللي يكلف فعلاً (تقريباً 10 دولار في الشهر)، والرصيد المجاني يغطيه شهور. وتنبيه الميزانية من اليوم الأول يحميك.</li>
-      <li><b>المنطقة:</b> نحاول نستخدم منطقة الدمام <code>me-central2</code>، ونتأكد في الأسبوع 2 إن كل الخدمات متوفرة فيها.</li>
-      <li><b>مصادر الوظايف:</b> نبدأ بالشركات اللي تستخدم Greenhouse وLever وWorkable، ونكبّر القائمة مع الوقت. <b>ما نسحب بيانات من LinkedIn</b> لأن شروطه تمنع هذا.</li>
+      <li><b>البطاقة:</b> AWS يقبل بطاقات Visa وMastercard الائتمانية. وما فيه تأكيد رسمي إنه يقبل مدى، فتأكد من بطاقتك قبل الأسبوع 2.</li>
+      <li><b>المنطقة:</b> نبدأ في البحرين <code>me-south-1</code>. ولو فتحت منطقة AWS السعودية (المعلن إنها في ديسمبر 2026)، ننقل لها بـ Terraform.</li>
+      <li><b>مصادر الوظايف:</b> أكبر خطر في المشروع إن شركات سعودية كثيرة ما تستخدم Greenhouse وLever وWorkable، فنتأكد من القائمة في اليوم 2. و<b>ما نسحب بيانات من LinkedIn</b> لأن شروطه تمنع هذا.</li>
       <li><b>إذا تأخرت:</b> عادي. الخطة مرنة، والمهم إن كل مفهوم يكون واضح لك قبل ما ننتقل للي بعده.</li>
     </ul>
   </div>
 </section>
 
-<footer>بدأت الخطة: 19 أكتوبر 2026 · علّم على كل خطوة تخلّصها، ويتحفظ تقدّمك في متصفحك.</footer>
+<footer>بدأت الخطة: 19 أكتوبر 2026 · تحوّلت لـ AWS: 21 أكتوبر 2026 · علّم على كل خطوة تخلّصها، ويتحفظ تقدّمك في متصفحك.</footer>
 </div>
 
 <script>
 (function () {
-  var KEY = 'radar-plan-progress-v1';
+  var KEY = 'radar-plan-progress-v2';
   var state = {};
   try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
   var days = Array.prototype.slice.call(document.querySelectorAll('.day'));
@@ -265,7 +311,7 @@
   days.forEach(function (d) {
     var id = d.getAttribute('data-id');
     var box = d.querySelector('input');
-    box.checked = !!state[id];
+    box.checked = (id in state) ? !!state[id] : d.hasAttribute('data-default-done');
     d.classList.toggle('done', box.checked);
     box.addEventListener('change', function () {
       state[id] = box.checked;
