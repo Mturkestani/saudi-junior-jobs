@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>خطة رادار الوظائف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --border: #e3e6eb;
+    --text: #14171c; --muted: #5d6470; --faint: #8a919c;
+    --accent: #1f6feb; --accent-soft: #e7f0ff;
+    --good: #1a7f4b; --good-soft: #e5f5ec;
+    --warn: #9a5b00; --warn-soft: #fff3df;
+    --w0: #6e56cf; --w1: #1f6feb; --w2: #0e8a7a; --w3: #b0670a; --w4: #c2410c;
+    --shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --border: #2a303a;
+      --text: #e8ebef; --muted: #a3abb7; --faint: #79818d;
+      --accent: #5b9dff; --accent-soft: #15243d;
+      --good: #4cc38a; --good-soft: #12291e;
+      --warn: #e2a64b; --warn-soft: #2d2412;
+      --w0: #a593ff; --w1: #5b9dff; --w2: #3cc5b2; --w3: #e2a64b; --w4: #ff8a5c;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --border: #2a303a;
+    --text: #e8ebef; --muted: #a3abb7; --faint: #79818d;
+    --accent: #5b9dff; --accent-soft: #15243d;
+    --good: #4cc38a; --good-soft: #12291e;
+    --warn: #e2a64b; --warn-soft: #2d2412;
+    --w0: #a593ff; --w1: #5b9dff; --w2: #3cc5b2; --w3: #e2a64b; --w4: #ff8a5c;
+    --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font-family: "IBM Plex Sans Arabic", -apple-system, "SF Arabic", "Geeza Pro", Tahoma, sans-serif; line-height: 1.75; font-size: 15px; }
+  code, pre { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; direction: ltr; unicode-bidi: isolate; }
+  code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-size: 13px; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  header h1 { font-size: 30px; margin: 0 0 4px; }
+  header .sub { color: var(--muted); margin: 0; }
+  .progress { margin: 18px 0 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; box-shadow: var(--shadow); }
+  .progress .top { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
+  .progress .top b { color: var(--text); }
+  .bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--good); border-radius: 999px; transition: width .25s; }
+
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+  nav.toc a { text-decoration: none; color: var(--text); background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 999px; font-size: 13.5px; }
+
+  section { margin-top: 30px; }
+  h2 { font-size: 21px; margin: 0 0 6px; }
+  h3 { font-size: 16px; margin: 18px 0 6px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; box-shadow: var(--shadow); }
+  .panel p { margin: 6px 0; }
+  ul.clean { margin: 6px 0; padding-inline-start: 20px; }
+  ul.clean li { margin: 3px 0; }
+
+  pre.arch { background: var(--surface-2); border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.55; overflow-x: auto; margin: 8px 0 0; text-align: left; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .step b { display: block; font-size: 15px; }
+  .step span { color: var(--muted); font-size: 14px; }
+
+  .week { border-inline-start: 4px solid var(--wc, var(--accent)); }
+  .week-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; }
+  .week-head h2 { color: var(--wc); }
+  .goal { color: var(--muted); margin: 2px 0 12px; }
+  .days { display: grid; gap: 10px; }
+  .day { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; }
+  .day.done { opacity: .55; }
+  .day input { width: 18px; height: 18px; margin-top: 4px; accent-color: var(--good); grid-row: span 3; cursor: pointer; }
+  .day .dt { font-weight: 700; }
+  .day .dt small { font-weight: 500; color: var(--faint); margin-inline-start: 6px; }
+  .day .concept { font-size: 14px; color: var(--muted); }
+  .day .concept b { color: var(--text); }
+  .day .task { font-size: 14px; }
+  .day .task::before { content: "نطبّق: "; color: var(--faint); font-weight: 600; font-size: 12.5px; }
+  .milestone { margin-top: 12px; background: var(--good-soft); color: var(--good); border-radius: 10px; padding: 10px 14px; font-weight: 600; font-size: 14px; }
+  .why { margin-top: 10px; background: var(--warn-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+  .why b { color: var(--warn); }
+
+  blockquote.cv { margin: 8px 0 0; background: var(--surface-2); border-radius: 12px; padding: 12px 16px; direction: ltr; text-align: left; font-size: 14px; }
+  blockquote.cv ul { margin: 6px 0 0; padding-left: 18px; }
+  footer { margin-top: 30px; color: var(--faint); font-size: 13px; }
+
+  @media (max-width: 680px) {
+    .steps { grid-template-columns: minmax(0, 1fr); }
+    header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>رادار الوظائف للخريجين</h1>
+  <p class="sub">Saudi Junior Jobs Radar · خطة تنفيذية وتعليمية لمدة 4 أسابيع · GCP</p>
+</header>
+
+<div class="progress">
+  <div class="top"><span>تقدّمك</span><span><b id="p-done">0</b> من <b id="p-total">0</b> خطوة</span></div>
+  <div class="bar"><span id="p-bar"></span></div>
+</div>
+
+<nav class="toc" aria-label="المحتويات">
+  <a href="#goal">الهدف</a><a href="#arch">شكل النظام</a><a href="#method">طريقة الجلسة</a>
+  <a href="#w0">الأسبوع 0</a><a href="#w1">الأسبوع 1</a><a href="#w2">الأسبوع 2</a><a href="#w3">الأسبوع 3</a><a href="#w4">الأسبوع 4</a>
+  <a href="#cv">في الـ CV</a><a href="#notes">ملاحظات</a>
+</nav>
+
+<section id="goal">
+  <h2>الهدف النهائي</h2>
+  <div class="panel">
+    <p>خدمة تجمع وظايف التقنية للخريجين وبرامج تطوير الخريجين في السعودية كل يوم، وتشيل اللي يطلب خبرة، وتنبّه المشتركين بالجديد على تيليجرام، وفيها صفحة ويب عامة.</p>
+    <p>بعد 4 أسابيع يكون عندك:</p>
+    <ul class="clean">
+      <li><b>صفحة ويب عامة</b> برابط حقيقي، تتحدث كل يوم.</li>
+      <li><b>بوت تيليجرام</b> يرسل الوظايف الجديدة كل صباح.</li>
+      <li><b>كل شي على GCP</b>، مبني بـ Terraform، وينشر نفسه تلقائياً، وفيه مراقبة وتنبيهات.</li>
+      <li><b>ريبو على GitHub</b> فيه رسم للنظام وشرح، و<b>بوست LinkedIn</b>.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="arch">
+  <h2>شكل النظام</h2>
+  <div class="panel">
+<pre class="arch">  Every day 08:00
+  Cloud Scheduler ──▶ Collector (Cloud Run Job)
+                          │  fetch: Greenhouse / Lever / Workable + manual programs
+                          │  filter: drop roles asking 3+ years
+                          ▼
+                      Cloud SQL (Postgres) ◀── Web (Cloud Run Service)
+                          │                     ├─ public jobs page
+                          ▼                     └─ Telegram subscribe webhook
+                    Telegram: send new jobs to subscribers</pre>
+    <p>النظام فيه خدمتين بس: <b>Collector</b> و<b>Web</b>. خدمة أقل يعني تعقيد أقل وأنت تتعلم.</p>
+  </div>
+</section>
+
+<section id="method">
+  <h2>طريقة كل جلسة</h2>
+  <div class="steps">
+    <div class="step"><b>1. شرح</b><span>وش المفهوم، وليش موجود، ومثال من الحياة، قبل أي كود.</span></div>
+    <div class="step"><b>2. تطبيق</b><span>أنت تكتب الكود أو الأوامر بنفسك، وأنا معك.</span></div>
+    <div class="step"><b>3. تحقق</b><span>نكسر الشي عن قصد ونصلحه، أو تشرحه بكلامك. ما ننتقل قبل ما يكون واضح.</span></div>
+  </div>
+  <p style="color:var(--muted);font-size:14px;margin-top:8px">الوقت: ساعة ونص إلى ساعتين في اليوم، 5 أيام في الأسبوع، ويوم السبت مراجعة.</p>
+</section>
+
+<section id="w0" class="panel week" style="--wc:var(--w0)">
+  <div class="week-head"><h2>الأسبوع 0: تجهيز</h2><span class="goal">يوم واحد</span></div>
+  <div class="days">
+    <label class="day" data-id="w0-1"><input type="checkbox"><span class="dt">حساب GCP</span><span class="concept">الرصيد المجاني 300 دولار، و<b>تنبيه ميزانية عند 20 دولار</b> عشان ما تتفاجأ بفاتورة.</span><span class="task">تفعيل الحساب، وإنشاء Project، وBudget Alert</span></label>
+    <label class="day" data-id="w0-2"><input type="checkbox"><span class="dt">ريبو GitHub</span><span class="concept">مكان الكود والـ CI/CD.</span><span class="task">ريبو جديد <code>saudi-junior-jobs</code> وربطه بهالمجلد</span></label>
+    <label class="day" data-id="w0-3"><input type="checkbox"><span class="dt">بوت تيليجرام</span><span class="concept">BotFather يعطيك توكن تتحكم فيه بالبوت.</span><span class="task">إنشاء البوت وحفظ التوكن في مكان آمن (مو في الكود)</span></label>
+    <label class="day" data-id="w0-4"><input type="checkbox"><span class="dt">الأدوات</span><span class="concept">الأدوات اللي بنستخدمها طول المشروع.</span><span class="task">Docker Desktop وPython 3.12 وTerraform و<code>gcloud</code> CLI</span></label>
+  </div>
+</section>
+
+<section id="w1" class="panel week" style="--wc:var(--w1)">
+  <div class="week-head"><h2>الأسبوع 1: التطبيق يشتغل على جهازك</h2></div>
+  <p class="goal">الهدف: أمر واحد يشغّل النظام كامل على جهازك.</p>
+  <div class="days">
+    <label class="day" data-id="w1-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Git Flow وPull Requests</small></span><span class="concept">ما تعدّل على النسخة الأساسية مباشرة. تسوي <b>فرع</b>، وتفتح <b>طلب دمج</b>، وبعدها تدمج.</span><span class="task">تجهيز الريبو، وحماية فرع main، وأول PR</span></label>
+    <label class="day" data-id="w1-2"><input type="checkbox"><span class="dt">اليوم 2 <small>APIs ومصادر البيانات</small></span><span class="concept">شركات كثيرة تنشر وظايفها عبر <b>Greenhouse وLever وWorkable</b>، وكل واحد منها له رابط JSON عام.</span><span class="task">Collector يجيب وظايف 10 شركات سعودية</span></label>
+    <label class="day" data-id="w1-3"><input type="checkbox"><span class="dt">اليوم 3 <small>الفلترة والاختبارات</small></span><span class="concept">المنطق الأساسي للمشروع: هل الوظيفة جونيور؟ ونكتب <b>اختبار لكل قاعدة</b>.</span><span class="task">دالة تشيل الوظايف اللي تطلب 3 سنوات أو أكثر، و10 اختبارات لها</span></label>
+    <label class="day" data-id="w1-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Docker</small></span><span class="concept">تحط التطبيق في <b>صندوق</b> فيه كل اللي يحتاجه، فيشتغل بنفس الطريقة على أي جهاز.</span><span class="task">Dockerfile للـ Collector وDockerfile للـ Web</span></label>
+    <label class="day" data-id="w1-5"><input type="checkbox"><span class="dt">اليوم 5 <small>Docker Compose وEnvironment Variables</small></span><span class="concept">تشغّل <b>أكثر من صندوق مع بعض</b>، والإعدادات تنحط برا الكود.</span><span class="task"><code>docker compose up</code> يشغّل الخدمتين مع Postgres</span></label>
+  </div>
+  <div class="milestone">✅ نهاية الأسبوع: تفتح <code>localhost</code> وتشوف صفحة فيها وظايف حقيقية.</div>
+</section>
+
+<section id="w2" class="panel week" style="--wc:var(--w2)">
+  <div class="week-head"><h2>الأسبوع 2: CI وأول خطوة في GCP</h2></div>
+  <p class="goal">الهدف: التطبيق شغّال على GCP، ونشرته بيدك.</p>
+  <div class="days">
+    <label class="day" data-id="w2-1"><input type="checkbox"><span class="dt">اليوم 1 <small>CI</small></span><span class="concept">كل push يشغّل الاختبارات تلقائياً. عندك خبرة فيه، فهنا نطوّره.</span><span class="task">GitHub Actions يشغّل الاختبارات ويبني الـ images</span></label>
+    <label class="day" data-id="w2-2"><input type="checkbox"><span class="dt">اليوم 2 <small>أساسيات GCP</small></span><span class="concept"><b>Project</b> و<b>Region</b> و<b>IAM</b> (مين يقدر يسوي وش) و<b>Service Accounts</b> (حسابات للبرامج مو للبشر).</span><span class="task">جولة في الكونسول، وأول Service Account، ونتأكد من خدمات منطقة الدمام</span></label>
+    <label class="day" data-id="w2-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Artifact Registry</small></span><span class="concept">مكتبة تنحفظ فيها نسخ التطبيق <b>برقم إصدار</b>.</span><span class="task">رفع الـ images يدوي وفهم الـ tags</span></label>
+    <label class="day" data-id="w2-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Cloud Run وCloud SQL</small></span><span class="concept"><b>Cloud Run</b> يشغّل الصندوق بدون ما تدير سيرفر. <b>Cloud SQL</b> قاعدة Postgres مُدارة عنك.</span><span class="task">نشر الـ Web والـ Collector يدوي من الكونسول</span></label>
+    <label class="day" data-id="w2-5"><input type="checkbox"><span class="dt">اليوم 5 <small>Security Scanning</small></span><span class="concept">نفحص الصندوق ونكتشف المكتبات اللي فيها <b>ثغرات</b> قبل ما تنزل.</span><span class="task">إضافة Trivy للـ CI</span></label>
+  </div>
+  <div class="why"><b>ليش ننشر يدوي أول؟</b> عشان تفهم كل قطعة بيدك. وفي الأسبوع الجاي بنحوّل نفس الخطوات لكود، وبتعرف بالضبط وش يسوي الكود.</div>
+  <div class="milestone">✅ نهاية الأسبوع: رابط <code>*.run.app</code> شغّال على الإنترنت.</div>
+</section>
+
+<section id="w3" class="panel week" style="--wc:var(--w3)">
+  <div class="week-head"><h2>الأسبوع 3: كل شي كود، وكل شي تلقائي</h2></div>
+  <p class="goal">الهدف: تحذف كل اللي سويته يدوي، وأمر واحد يرجّعه.</p>
+  <div class="days">
+    <label class="day" data-id="w3-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Infrastructure as Code</small></span><span class="concept">تكتب البنية <b>كملف كود</b> بدل الضغط في الكونسول، فتقدر تعيدها وتراجعها وتحفظ نسخها.</span><span class="task">أول ملف Terraform يسوي Artifact Registry، ونتعلم <code>plan</code> و<code>apply</code></span></label>
+    <label class="day" data-id="w3-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Terraform State وModules</small></span><span class="concept">Terraform يتذكر وش سوّى في ملف اسمه <b>state</b>، وننقل هالملف للسحابة.</span><span class="task">State في Cloud Storage، وتعريف Cloud Run وCloud SQL في Terraform</span></label>
+    <label class="day" data-id="w3-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Secrets Management</small></span><span class="concept">كلمات المرور والتوكنات <b>ما تنحط في الكود</b> ولا في GitHub.</span><span class="task">توكن تيليجرام وكلمة مرور قاعدة البيانات في Secret Manager</span></label>
+    <label class="day" data-id="w3-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Scheduled Jobs</small></span><span class="concept">مهمة تشتغل <b>في وقت محدد</b> بدون ما تشغّلها أنت.</span><span class="task">Cloud Scheduler يشغّل الـ Collector كل يوم الساعة 8</span></label>
+    <label class="day" data-id="w3-5"><input type="checkbox"><span class="dt">اليوم 5 <small>CD وWorkload Identity</small></span><span class="concept">النشر يصير <b>تلقائي</b>، ونربط GitHub بـ GCP <b>بدون مفاتيح سرية</b>.</span><span class="task">كل merge على main ينبني ويتفحص وينزل على Cloud Run</span></label>
+  </div>
+  <div class="milestone">✅ نهاية الأسبوع: تحذف كل شي، و<code>terraform apply</code> يرجّع النظام كامل. وتعديل سطر واحد ينزل لحاله على الإنترنت.</div>
+</section>
+
+<section id="w4" class="panel week" style="--wc:var(--w4)">
+  <div class="week-head"><h2>الأسبوع 4: مراقبة وإطلاق</h2></div>
+  <p class="goal">الهدف: نظام تقدر تعتمد عليه، وناس تستخدمه.</p>
+  <div class="days">
+    <label class="day" data-id="w4-1"><input type="checkbox"><span class="dt">اليوم 1 <small>Logging</small></span><span class="concept">كل خدمة تكتب وش صار، وأنت تبحث فيها <b>من مكان واحد</b>.</span><span class="task">سجلات مرتبة (structured logs) وبحث في Cloud Logging</span></label>
+    <label class="day" data-id="w4-2"><input type="checkbox"><span class="dt">اليوم 2 <small>Monitoring وAlerts</small></span><span class="concept">تعرف إن فيه مشكلة <b>قبل ما يقولك المستخدم</b>.</span><span class="task">تنبيه إذا الـ Collector فشل أو جاب صفر وظائف، وفحص uptime للصفحة</span></label>
+    <label class="day" data-id="w4-3"><input type="checkbox"><span class="dt">اليوم 3 <small>Rollback وVersioning</small></span><span class="concept">لو نزّلت نسخة خربانة، ترجع للنسخة اللي قبلها <b>في ثواني</b>.</span><span class="task">ننزّل نسخة فيها خطأ عن قصد ونرجع منها</span></label>
+    <label class="day" data-id="w4-4"><input type="checkbox"><span class="dt">اليوم 4 <small>Domain وHTTPS</small></span><span class="concept">رابط <b>مرتب وآمن</b> بدل رابط Cloud Run الطويل.</span><span class="task">ربط دومين (اختياري، حوالي 40 ريال في السنة)</span></label>
+    <label class="day" data-id="w4-5"><input type="checkbox"><span class="dt">اليوم 5 <small>التوثيق والإطلاق</small></span><span class="concept">الريبو هو <b>واجهتك</b> قدام الشركات.</span><span class="task">README فيه رسم النظام، ونشر البوت في قروبات الخريجين، وبوست LinkedIn</span></label>
+  </div>
+  <div class="milestone">✅ نهاية الأسبوع: مشروع منشور، وعليه مستخدمين، وريبو مرتب، وبوست على LinkedIn.</div>
+</section>
+
+<section id="cv">
+  <h2>وش ينضاف في سيرتك</h2>
+  <div class="panel">
+    <blockquote class="cv">
+      <b>Saudi Junior Jobs Radar</b> — GCP · Terraform · Docker · GitHub Actions · Python · Postgres
+      <ul>
+        <li>Built a service that collects junior tech jobs and graduate programs in Saudi Arabia daily and alerts [X] subscribers on Telegram.</li>
+        <li>Provisioned all infrastructure with Terraform on GCP (Cloud Run, Cloud SQL, Scheduler, Secret Manager), with keyless CI/CD from GitHub Actions.</li>
+        <li>Added monitoring, alerting and one-step rollback; the pipeline scans every image before deploy.</li>
+      </ul>
+    </blockquote>
+  </div>
+</section>
+
+<section id="notes">
+  <h2>ملاحظات</h2>
+  <div class="panel">
+    <ul class="clean">
+      <li><b>التكلفة:</b> Cloud SQL هو الشي الوحيد اللي يكلف فعلاً (تقريباً 10 دولار في الشهر)، والرصيد المجاني يغطيه شهور. وتنبيه الميزانية من اليوم الأول يحميك.</li>
+      <li><b>المنطقة:</b> نحاول نستخدم منطقة الدمام <code>me-central2</code>، ونتأكد في الأسبوع 2 إن كل الخدمات متوفرة فيها.</li>
+      <li><b>مصادر الوظايف:</b> نبدأ بالشركات اللي تستخدم Greenhouse وLever وWorkable، ونكبّر القائمة مع الوقت. <b>ما نسحب بيانات من LinkedIn</b> لأن شروطه تمنع هذا.</li>
+      <li><b>إذا تأخرت:</b> عادي. الخطة مرنة، والمهم إن كل مفهوم يكون واضح لك قبل ما ننتقل للي بعده.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>بدأت الخطة: 19 أكتوبر 2026 · علّم على كل خطوة تخلّصها، ويتحفظ تقدّمك في متصفحك.</footer>
+</div>
+
+<script>
+(function () {
+  var KEY = 'radar-plan-progress-v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  var days = Array.prototype.slice.call(document.querySelectorAll('.day'));
+  var total = days.length;
+  document.getElementById('p-total').textContent = total;
+  function update() {
+    var done = days.filter(function (d) { return d.querySelector('input').checked; }).length;
+    document.getElementById('p-done').textContent = done;
+    document.getElementById('p-bar').style.width = (total ? (done / total * 100) : 0) + '%';
+  }
+  days.forEach(function (d) {
+    var id = d.getAttribute('data-id');
+    var box = d.querySelector('input');
+    box.checked = !!state[id];
+    d.classList.toggle('done', box.checked);
+    box.addEventListener('change', function () {
+      state[id] = box.checked;
+      d.classList.toggle('done', box.checked);
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      update();
+    });
+  });
+  update();
+})();
+</script>
+</body>
+</html>
